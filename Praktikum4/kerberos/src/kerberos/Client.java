@@ -11,18 +11,24 @@ public class Client extends Object {
 
   private KDC myKDC; // Konstruktor-Parameter
 
-  private String currentUser; // Speicherung bei Login nötig
-  private Ticket tgsTicket = null; // Speicherung bei Login nötig
-  private long tgsSessionKey; // K(C,TGS) // Speicherung bei Login nötig
+  private String currentUser; // Speicherung bei Login nï¿½tig
+  private Ticket tgsTicket = null; // Speicherung bei Login nï¿½tig
+  private long tgsSessionKey; // K(C,TGS) // Speicherung bei Login nï¿½tig
 
   // Konstruktor
   public Client(KDC kdc) {
     myKDC = kdc;
   }
 
+  /**
+   * Aufgabe: TGS-Ticket fÃ¼r den Ã¼bergebenen Benutzer vom KDC (AS) holen (TGS-Servername:
+   * myTGS ) und zusammen mit dem TGS-Sessionkey und dem UserNamen speichern.
+   * @return Status (Login ok / fehlgeschlagen)
+   */
   public boolean login(String userName, char[] password) {
     boolean result = false;
     currentUser = userName;
+    // Abholen und ueberpruefen des Tickets fuer den Ticket-Granting-Service.
     TicketResponse ticketResponse = myKDC.requestTGSTicket(userName, "myTGS", generateNonce());
     if (ticketResponse.decrypt(generateSimpleKeyFromPassword(password))) {
       System.out.println("Ticket decrypted!");
@@ -36,10 +42,16 @@ public class Client extends Object {
     return result;
   }
 
+  /**
+   * Aufgabe: Serverticket vom KDC (TGS) holen und â€žshowFileâ€œ-Service beim Ã¼bergebenen
+   * Fileserver anfordern.
+   * @return Status (BefehlsausfÃ¼hrung ok / fehlgeschlagen)
+   */
   public boolean showFile(Server fileServer, String filePath) {
     Auth auth = new Auth(currentUser, System.currentTimeMillis());
     auth.encrypt(tgsSessionKey);
     long nonce2 = generateNonce();
+    // Holen eines Tickets (vom Ticket-Granting-Service) um auf den FileServer zuzugreifen.
     TicketResponse ticketResponse =
         myKDC.requestServerTicket(tgsTicket, auth, fileServer.getName(), nonce2);
     ticketResponse.decrypt(tgsSessionKey);
@@ -47,6 +59,7 @@ public class Client extends Object {
       System.err.println("Client Information: Wrong nonce returned!");
       return false;
     }
+    // Simuliere PC-Last.
     try {
       sleep(1000);
     } catch (InterruptedException e) {
@@ -56,6 +69,7 @@ public class Client extends Object {
     Ticket ticket = ticketResponse.getResponseTicket();
     Auth authClientServer = new Auth(currentUser, System.currentTimeMillis());
     authClientServer.encrypt(keyClientServer);
+    // Fordere die Ausfuehrung des Kommandos "showFile" an.
     fileServer.requestService(ticket, authClientServer, "showFile", filePath);
     return true;
   }
@@ -63,8 +77,8 @@ public class Client extends Object {
 	/* *********** Hilfsmethoden **************************** */
 
   private long generateSimpleKeyFromPassword(char[] passwd) {
-    // Liefert einen eindeutig aus dem Passwort abgeleiteten Schlüssel
-    // zurück, hier simuliert als long-Wert
+    // Liefert einen eindeutig aus dem Passwort abgeleiteten Schlï¿½ssel
+    // zurï¿½ck, hier simuliert als long-Wert
     long pwKey = 0;
     if (passwd != null) {
       for (int i = 0; i < passwd.length; i++) {

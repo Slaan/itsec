@@ -37,7 +37,7 @@ public class PasswordDialog extends JDialog {
 	 * ----------------------------------------------------
 	 */
 	public PasswordDialog(String userName) {
-		// Modalen Dialog über Parameter festlegen
+		// Modalen Dialog ï¿½ber Parameter festlegen
 		super((Frame) null, "HAW Department Informatik WP IT-Sicherheit", true);
 
 		String okLabel = "  OK  ";
@@ -49,23 +49,30 @@ public class PasswordDialog extends JDialog {
 		contentPanel.setLayout(new BorderLayout(100, 20));
 		// Text-Anzeige
 		JLabel labelMessage1 = new JLabel("<html><body><font size=\"+1\">"
-				+ "<em>Bitte Passwort für " + userName
+				+ "<em>Bitte Passwort fÃ¼r " + userName
 				+ " eingeben: </em></font><br>" + "</body></html>",
 				SwingConstants.CENTER);
 		contentPanel.add(labelMessage1, BorderLayout.NORTH);
 
-		// Füllregionen links und rechts
+		// Fï¿½llregionen links und rechts
 		JLabel leftDist = new JLabel(" ");
 		contentPanel.add(leftDist, BorderLayout.WEST);
 		JLabel rightDist = new JLabel(" ");
 		contentPanel.add(rightDist, BorderLayout.EAST);
 
 		passwortField = new JPasswordField(15);
+		passwortField.setText("Secret!");
+		passwortField.addActionListener(new ActionListener() {
+			@Override public void actionPerformed(ActionEvent actionEvent) {
+				status = true;
+				closeDialog();
+			}
+		});
 
 		// passwortField auf Fenster verankern
 		contentPanel.add(passwortField, BorderLayout.CENTER);
 
-		// Panel für die OK/Cancel-Buttons erzeugen
+		// Panel fï¿½r die OK/Cancel-Buttons erzeugen
 		JPanel buttonPanel = new JPanel();
 		buttonPanel.setLayout(new FlowLayout());
 
@@ -98,8 +105,8 @@ public class PasswordDialog extends JDialog {
 	}
 
 	private void closeDialog() {
-		// Fenster schließen
-		setVisible(false);
+		// Fenster schlieï¿½en
+		//setVisible(false);
 		dispose();
 	}
 

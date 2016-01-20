@@ -8,10 +8,10 @@ import java.util.*;
 
 public class KDC extends Object {
 
-  private final long tenHoursInMillis = 36000000; // 10 Stunden in
+  private final long TEN_HOURS_IN_MILLIS = 36000000; // 10 Stunden in
   // Millisekunden
 
-  private final long fiveMinutesInMillis = 300000; // 5 Minuten in
+  private final long FIVE_MINUTES_IN_MILLIS = 300000; // 5 Minuten in
   // Millisekunden
 
 	/* *********** Datenbank-Simulation **************************** */
@@ -26,16 +26,16 @@ public class KDC extends Object {
 
   private long serverKey; // K(S)
 
-  private long serverSessionKey; // K(C,S)
+  //private long serverSessionKey; // K(C,S)
+
+  //private long tgsSessionKey; // K(C,TGS)
 
   private long tgsKey; // K(TGS)
-
-  private long tgsSessionKey; // K(C,TGS)
 
   // Konstruktor
   public KDC(String name) {
     tgsName = name;
-    // Eigenen Key für TGS erzeugen (streng geheim!!!)
+    // Eigenen Key fï¿½r TGS erzeugen (streng geheim!!!)
     tgsKey = generateSimpleKey();
   }
 
@@ -47,11 +47,11 @@ public class KDC extends Object {
 
   public long serverRegistration(String sName) {
     /*
-		 * Server in der Datenbank registrieren. Rückgabe: ein neuer geheimer
-		 * Schlüssel für den Server
+		 * Server in der Datenbank registrieren. Rï¿½ckgabe: ein neuer geheimer
+		 * Schlï¿½ssel fï¿½r den Server
 		 */
     serverName = sName;
-    // Eigenen Key für Server erzeugen (streng geheim!!!)
+    // Eigenen Key fï¿½r Server erzeugen (streng geheim!!!)
     serverKey = generateSimpleKey();
     return serverKey;
   }
@@ -68,7 +68,7 @@ public class KDC extends Object {
 	/* *********** AS-Modul: TGS - Ticketanfrage **************************** */
 
   public TicketResponse requestTGSTicket(String userName, String tgsServerName, long nonce) {
-		/* Anforderung eines TGS-Tickets bearbeiten. Rückgabe: TicketResponse für die Anfrage */
+		/* Anforderung eines TGS-Tickets bearbeiten. Rï¿½ckgabe: TicketResponse fï¿½r die Anfrage */
 
     TicketResponse tgsTicketResp = null;
     Ticket tgsTicket = null;
@@ -78,22 +78,22 @@ public class KDC extends Object {
     if (userName.equals(user) && // Usernamen und Userpasswort in der
         // Datenbank suchen!
         tgsServerName.equals(tgsName)) {
-      // OK, neuen Session Key für Client und TGS generieren
-      tgsSessionKey = generateSimpleKey();
+      // OK, neuen Session Key fï¿½r Client und TGS generieren
+      long tgsSessionKey = generateSimpleKey();
       currentTime = (new Date()).getTime(); // Anzahl mSek. seit
       // 1.1.1970
 
       // Zuerst TGS-Ticket basteln ...
       tgsTicket =
-          new Ticket(user, tgsName, currentTime, currentTime + tenHoursInMillis, tgsSessionKey);
+          new Ticket(user, tgsName, currentTime, currentTime + TEN_HOURS_IN_MILLIS, tgsSessionKey);
 
-      // ... dann verschlüsseln ...
+      // ... dann verschlï¿½sseln ...
       tgsTicket.encrypt(tgsKey);
 
       // ... dann Antwort erzeugen
       tgsTicketResp = new TicketResponse(tgsSessionKey, nonce, tgsTicket);
 
-      // ... und verschlüsseln
+      // ... und verschlï¿½sseln
       tgsTicketResp.encrypt(userPasswordKey);
     }
     return tgsTicketResp;
@@ -104,10 +104,19 @@ public class KDC extends Object {
 	 * ****************************
 	 */
 
+  /**
+   * Anforderung eines Server-Tickets bearbeiten.
+   * @return TicketResponse fÃ¼r die Anfrage
+   */
   public TicketResponse requestServerTicket(Ticket tgsTicket, Auth tgsAuth, String serverName,
       long nonce) {
-    tgsTicket.decrypt(tgsKey);
-    tgsAuth.decrypt(tgsSessionKey);
+    if (!tgsTicket.decrypt(tgsKey)) {
+      throw new RuntimeException("KDC: Could not decrypt tgsTicket.");
+    }
+    long tgsSessionKey = tgsTicket.getSessionKey();
+    if (!tgsAuth.decrypt(tgsSessionKey)) {
+      throw new RuntimeException("KDC: Could not decrypt tgsAuth.");
+    }
     // Check for authentification
     if (!tgsTicket.getClientName().equals(tgsAuth.getClientName())) {
       System.err.println(
@@ -121,11 +130,11 @@ public class KDC extends Object {
       System.err.println("KDC Information: Ticket invalid due to expiration");
     }
     // Generate Session key for client-server communication
-    serverSessionKey = generateSimpleKey();
+    long serverSessionKey = generateSimpleKey();
     // generate ticket for server
     Ticket ticketForServer =
         new Ticket(tgsTicket.getClientName(), serverName, System.currentTimeMillis(),
-            System.currentTimeMillis() + tenHoursInMillis, serverSessionKey);
+            System.currentTimeMillis() + TEN_HOURS_IN_MILLIS, serverSessionKey);
     ticketForServer.encrypt(serverKey);
     TicketResponse ticketResponse = new TicketResponse(serverSessionKey, nonce, ticketForServer);
     ticketResponse.encrypt(tgsSessionKey);
@@ -135,8 +144,8 @@ public class KDC extends Object {
 	/* *********** Hilfsmethoden **************************** */
 
   private long getServerKey(String sName) {
-    // Liefert den zugehörigen Serverkey für den Servernamen zurück
-    // Wenn der Servername nicht bekannt, wird -1 zurückgegeben
+    // Liefert den zugehï¿½rigen Serverkey fï¿½r den Servernamen zurï¿½ck
+    // Wenn der Servername nicht bekannt, wird -1 zurï¿½ckgegeben
     if (sName.equalsIgnoreCase(serverName)) {
       System.out.println("Serverkey ok");
       return serverKey;
@@ -147,7 +156,7 @@ public class KDC extends Object {
   }
 
   private long generateSimpleKeyForPassword(char[] pw) {
-    // Liefert einen Schlüssel für ein Passwort zurück, hier simuliert als
+    // Liefert einen Schlï¿½ssel fï¿½r ein Passwort zurï¿½ck, hier simuliert als
     // long-Wert
     long pwKey = 0;
     for (int i = 0; i < pw.length; i++) {
@@ -157,7 +166,7 @@ public class KDC extends Object {
   }
 
   private long generateSimpleKey() {
-    // Liefert einen neuen geheimen Schlüssel, hier nur simuliert als
+    // Liefert einen neuen geheimen Schlï¿½ssel, hier nur simuliert als
     // long-Wert
     long sKey = (long) (100000000 * Math.random());
     return sKey;
@@ -177,12 +186,12 @@ public class KDC extends Object {
   }
 
   boolean timeFresh(long testTime) {
-    // Wenn die übergebene Zeit nicht mehr als 5 Minuten von der aktuellen
+    // Wenn die ï¿½bergebene Zeit nicht mehr als 5 Minuten von der aktuellen
     // Zeit abweicht,
-    // wird true zurückgegeben
+    // wird true zurï¿½ckgegeben
     long currentTime = (new Date()).getTime(); // Anzahl mSek. seit
     // 1.1.1970
-    if (Math.abs(currentTime - testTime) < fiveMinutesInMillis) {
+    if (Math.abs(currentTime - testTime) < FIVE_MINUTES_IN_MILLIS) {
       return true;
     } else {
       System.out.println(

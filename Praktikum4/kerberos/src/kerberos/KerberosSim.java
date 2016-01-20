@@ -16,7 +16,7 @@ public class KerberosSim {
 
 		// Server initialisieren
 		myFileserver = new Server(serverName);
-		myFileserver.setupService(myKDC); // Schlüsselerzeugung und -austausch
+		myFileserver.setupService(myKDC); // Schlï¿½sselerzeugung und -austausch
 
 		// User-Account und Client erzeugen
 		myKDC.userRegistration(userName, password);
@@ -25,7 +25,7 @@ public class KerberosSim {
 
 	public char[] readPasswd(String userName) {
 		/*
-		 * Passworteingabe über modalen Dialog. Liefert ein Passwort oder null
+		 * Passworteingabe ï¿½ber modalen Dialog. Liefert ein Passwort oder null
 		 * bei Abbruch durch den Benutzer
 		 */
 		char[] password = null;
@@ -33,6 +33,7 @@ public class KerberosSim {
 		if (pwDialog.statusOK()) {
 			password = pwDialog.getPassword();
 		}
+		pwDialog.dispose();
 		return password;
 	}
 
@@ -45,7 +46,7 @@ public class KerberosSim {
 
 		// -------- Start Initialisierung des Systems ------------------
 		String userName = "axz467";
-		char[] password = { 's' };
+		char[] password = {'S', 'e', 'c', 'r', 'e', 't', '!'};
 		String serverName = "myFileserver";
 		String tgsName = "myTGS";
 		String filePath = "showFile";
@@ -59,14 +60,14 @@ public class KerberosSim {
 
 		/* -------- Benutzersession simulieren ------ */
 		// Passwort vom Benutzer holen
-		System.out.println("Starte Login-Session für Benutzer: " + userName);
+		System.out.println("Starte Login-Session fï¿½r Benutzer: " + userName);
 		password = thisSession.readPasswd(userName);
 		if (password != null) {
 
 			// Benutzeranmeldung beim KDC
 			boolean loginOK = thisSession.myClient.login(userName, password);
 
-			// Passwort im Hauptspeicher löschen (überschreiben)!!
+			// Passwort im Hauptspeicher lï¿½schen (ï¿½berschreiben)!!
 			Arrays.fill(password, ' ');
 
 			if (!loginOK) {
@@ -78,6 +79,8 @@ public class KerberosSim {
 				boolean serviceOK = thisSession.myClient.showFile(thisSession.myFileserver, filePath);
 				if (!serviceOK) {
 					System.out.println("Zugriff auf Server " + serverName + " ist fehlgeschlagen!");
+				} else {
+					System.out.println("Zugriff auf Server " + serverName + " erfolgreich.");
 				}
 			}
 		}

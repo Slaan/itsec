@@ -9,7 +9,7 @@ import java.io.*;
 
 public class Server extends Object {
 
-  private final long fiveMinutesInMillis = 300000; // 5 Minuten in
+  private final long FIVE_MINUTES_IN_MILLIS = 300000; // 5 Minuten in
   // Millisekunden
 
   private String myName; // Konstruktor-Parameter
@@ -33,15 +33,25 @@ public class Server extends Object {
         + " mit ServerKey " + myKey);
   }
 
+  /**
+   * â€žshowFileâ€œ-Befehl mit Filepath als Parameter ausfÃ¼hren, d.h. Dateiinhalt zeilenweise
+   * auf der Konsole ausgeben.
+   * @return Status (BefehlsausfÃ¼hrung ok / fehlgeschlagen)
+   */
   public boolean requestService(Ticket srvTicket, Auth srvAuth, String command, String parameter) {
-    srvTicket.decrypt(myKey);
-    srvAuth.decrypt(srvTicket.getSessionKey());
+    if (!srvTicket.decrypt(myKey)) {
+      throw new RuntimeException("Server: Could not decrypt srvTicket.");
+    }
+    if (!srvAuth.decrypt(srvTicket.getSessionKey())) {
+      throw new RuntimeException("Server: Could not decrypt srvAuth.");
+    }
+    // Ueberpruefung des Tickets.
     if (!srvTicket.getServerName().equals(myName)) {
       System.err.println("Server Information: Wrong Server requested" + srvTicket.getServerName());
       return false;
     }
     if (!(srvTicket.getClientName().equals(srvAuth.getClientName()))) {
-      System.err.println("Server Information: Authentification failed!");
+      System.err.println("Server Information: Authentification failed! Client name dos not match");
       return false;
     }
     if (!(srvTicket.getStartTime() < System.currentTimeMillis() && srvTicket.getEndTime() > System
@@ -52,8 +62,11 @@ public class Server extends Object {
               + System.currentTimeMillis());
       return false;
     }
+    // Ausfuehrung des Kommandos.
     if (command.equals("showFile")) {
       showFile(parameter);
+    } else {
+      System.err.println("Server: requestService: Command " + command + " not found.");
     }
     return true;
   }
@@ -62,7 +75,7 @@ public class Server extends Object {
 
   private boolean showFile(String filePath) {
     /*
-		 * Angegebene Datei auf der Konsole ausgeben. Rückgabe: Status der
+		 * Angegebene Datei auf der Konsole ausgeben. Rï¿½ckgabe: Status der
 		 * Operation
 		 */
     String lineBuf = null;
@@ -73,7 +86,7 @@ public class Server extends Object {
       System.out.println("Datei " + filePath + " existiert nicht!");
     } else {
       try {
-        // Datei öffnen und zeilenweise lesen
+        // Datei ï¿½ffnen und zeilenweise lesen
         BufferedReader inFile =
             new BufferedReader(new InputStreamReader(new FileInputStream(myFile)));
         lineBuf = inFile.readLine();
@@ -94,8 +107,8 @@ public class Server extends Object {
 
   private boolean timeValid(long lowerBound, long upperBound) {
 		/*
-		 * Wenn die aktuelle Zeit innerhalb der übergebenen Zeitgrenzen liegt,
-		 * wird true zurückgegeben
+		 * Wenn die aktuelle Zeit innerhalb der ï¿½bergebenen Zeitgrenzen liegt,
+		 * wird true zurï¿½ckgegeben
 		 */
 
     long currentTime = (new Date()).getTime(); // Anzahl mSek. seit 1.1.1970
@@ -111,11 +124,11 @@ public class Server extends Object {
 
   boolean timeFresh(long testTime) {
 		/*
-		 * Wenn die übergebene Zeit nicht mehr als 5 Minuten von der aktuellen
-		 * Zeit abweicht, wird true zurückgegeben
+		 * Wenn die ï¿½bergebene Zeit nicht mehr als 5 Minuten von der aktuellen
+		 * Zeit abweicht, wird true zurï¿½ckgegeben
 		 */
     long currentTime = (new Date()).getTime(); // Anzahl mSek. seit 1.1.1970
-    if (Math.abs(currentTime - testTime) < fiveMinutesInMillis) {
+    if (Math.abs(currentTime - testTime) < FIVE_MINUTES_IN_MILLIS) {
       return true;
     } else {
       System.out.println(
